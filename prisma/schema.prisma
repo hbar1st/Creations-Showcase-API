@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "./src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id        Int       @id @default(autoincrement())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  title     String
+  desc      String
+  live_link String?
+  repo_link String?
+  keywords  String?
+  images    Image[]
+  comments  Comment[]
+
+  @@map(name: "projects")
+}
+
+model Image {
+  id        Int     @id @default(autoincrement())
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+  name      String
+  public_id Int
+  type      String
+  url       String
+
+  @@map(name: "project_images")
+}
+
+model Comment {
+  id        Int     @id @default(autoincrement())
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  content   String?
+
+  @@map(name: "comments")
+}
+
+model User {
+  id        Int    @id @default(autoincrement())
+  email     String
+  firstname String
+  lastname  String
+  nickname  String
+
+  comments Comment[]
+  projects Project[]
+
+  password String @db.VarChar(255)
+
+  @@map(name: "users")
+}
