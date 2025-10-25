@@ -1,14 +1,21 @@
 const express = require("express");
-const crypto = require("crypto");
 
-const cloudinary = require("cloudinary").v2;
+// used to create salts or tokens 
+const crypto = require("crypto");
 
 const passport = require("./middleware/passport");
 
 const path = require("node:path");
 require("dotenv").config();
 
+
 const app = express();
+
+// allow express to parse the request body
+app.use(express.urlencoded({ extended: true })) 
+
+// use cloudinary to upload project images
+const cloudinary = require("cloudinary").v2;
 
 async function setupCloudinary() {
   console.log("Setting up Cloudinary");
@@ -22,17 +29,17 @@ async function setupCloudinary() {
   // Log the configuration
   console.log(cloudinary.config());
 }
-
 setupCloudinary();
+
 
 const MS_IN_24_HRS = 1000 * 60 * 60 * 24; // 24 hours in milliseconds
 
 // eslint-disable-next-line no-undef
-if (!process.env.SESSION_SECRET) {
+if (!process.env.SECRET_TOKEN) {
   console.log("found no session secret in .env, so must create one");
   const b = crypto.randomBytes(40); // any number over 32 is fine
   console.log(
-    `Setup the SECRET_SESSION value in .env with: ${b.toString("hex")}`
+    `Setup the SECRET_TOKEN value in .env with: ${b.toString("hex")}`
   );
   throw new Error("Failed to find a session secret in .env");
 }
@@ -45,11 +52,18 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/", (req, res) => {
+  res.send("The Creations Showcase API is an API that lets you showcase your web development projects and receive feedback on them.");
+});
+
+const userRouter = require("./routers/userRouter");
+app.use("/user", userRouter);
+
 // Catch-all for unhandled routes (must be placed last but before error handler)
 app.use((req, res) => {
-  res.status(404).send({
+  res.status(404).json({
     status: 'fail',
-    message: `Can't find ${req.originalUrl} on this server!`
+    message: `This is a surprising request. I can't find ${req.originalUrl} on this server!`
   })
 })
 
@@ -59,21 +73,19 @@ app.use((err, req, res, next) => {
   if (res.status === 401) {
     console.log('user tried to do something without being authenticated, tell them!')
   }
+  const timestamp = new Date().toUTCString;
   console.log("================================================")
   console.error('in the catch-all: ', err, err.stack)
   if (res.statusCode < 400) {
-    res.status(500)
+    res.status(500);
+    console.log("TODO: fix up whomever sent this error up here without setting the status?")
+    res.json({
+      message: "Internal Server Error. Contact support if this error persists.",
+      timestamp
+    });
+  } else {
+    res.json({ timestamp, ...err });
   }
-  // Send a user-friendly error message to the client
-  /*
-  if (res.statusCode === 404) {
-    res.render('404');
-  } else if (res.statusCode === 401) {
-    res.render('401', { statuscode: req.statusCode, errors: err});
-  }  else {
-    res.render('500', { statuscode: req.statusCode, errors: err })
-  }
-  */
 })
 
 const port = process.env.PORT || 3000

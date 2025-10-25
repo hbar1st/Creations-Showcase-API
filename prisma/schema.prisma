@@ -17,52 +17,58 @@ datasource db {
 
 model User {
   id        Int    @id @default(autoincrement())
-  email     String
-  firstname String
-  lastname  String
-  nickname  String
+  email     String @unique @db.VarChar(254)
+  firstname String @db.VarChar(25)
+  lastname  String @db.VarChar(50)
+  nickname  String @db.VarChar(25)
   password  String @db.VarChar(255)
 
   comments  Comment[]
   projects  Project[]
 
   @@map(name: "users")
+  @@unique([id, email])
 }
 
 model Project {
   id        Int       @id @default(autoincrement())
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
-  title     String
+  title     String    @db.VarChar(100)
   descr     String
-  live_link String?
+  live_link String? 
   repo_link String?
-  keywords  String?
+  keywords  String?   @db.VarChar(100)
+  published DateTime? 
   images    Image[]
   comments  Comment[]
 
   @@map(name: "projects")
+  @@unique([id, userId])
 }
 
 model Image {
   id        Int     @id @default(autoincrement())
-  name      String
-  public_id Int
-  type      String
+  name      String  @db.VarChar(100)
+  public_id Int     @unique
+  type      String  @db.VarChar(50)
   url       String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId Int
 
   @@map(name: "project_images")
+  @@unique([name, projectId])
 }
 
 model Comment {
   id        Int     @id @default(autoincrement())
-  content   String?
+  content   String? @db.VarChar(400)
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId Int
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
 
   @@map(name: "comments")
+  @@unique([projectId, userId])
+  @@unique([id, projectId, userId])
 }

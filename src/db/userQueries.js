@@ -15,8 +15,8 @@ async function addNewUser(firstname, lastname, nickname, email, password) {
 }
 
 async function findUser(email) {
-  console.log("in findUser: ", email);
-  const user = await prisma.user.findFirst({
+  console.log("in findUser: ", email); 
+  const user = await prisma.users.findFirst({
     where: {
       email,
     },
