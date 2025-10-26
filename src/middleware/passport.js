@@ -1,5 +1,5 @@
 const passport = require("passport");
-
+require("../errors/AuthError");
 // used to create salts or tokens 
 const crypto = require("crypto");
 require("dotenv").config();
@@ -18,7 +18,7 @@ if (!process.env.JWT_SECRET) {
     `Setup the JWT_SECRET value in .env with: ${b.toString("hex")}`
   );
 
-  throw new Error("Failed to find a jwt secret in .env");
+  throw new AuthError("Failed to find a jwt secret in .env", 500);
 }
 jwtopts.secretOrKey = process.env.JWT_SECRET;
 

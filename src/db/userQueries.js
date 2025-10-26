@@ -1,3 +1,4 @@
+const { PrismaClient } = require("../generated/prisma/client");
 const prisma = require("../middleware/prisma.mjs");
 
 // run inside `async` function
@@ -37,8 +38,8 @@ async function findUserById(id) {
   return user;
 }
 
-async function findUserByEmail(id) {
-  console.log("in findUserByEmail: ", id);
+async function findUserByEmail(email) {
+  console.log("in findUserByEmail: ", email);
   // By unique identifier
   const user = await prisma.default.user.findFirst({
     where: {
@@ -49,9 +50,20 @@ async function findUserByEmail(id) {
   return user;
 }
 
+async function deleteUser(id) {
+  console.log("in deleteUser: ", id);
+  const user = await prisma.default.user.delete({
+    where: {
+      id: Number(id)
+    }
+  })
+  return user;
+}
+
 module.exports = {
   addNewUser,
   findUser,
   findUserById,
   findUserByEmail,
+  deleteUser,
 };

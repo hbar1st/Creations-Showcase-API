@@ -1,12 +1,15 @@
+// Routes belonging to /user
+
 const { Router } = require("express");
 const { validationResult } = require("express-validator");
 
+require("../errors/ValidationError");
 const userRouter = Router();
 
 const {
   signUp,
   login,
-  logout
+  deleteUser,
 } = require("../controllers/userController");
 
 
@@ -19,8 +22,7 @@ function handleExpressValidationErrors(req, res, next) {
 
   console.log("validation ERRORS? ", errors);
   if (!errors.isEmpty()) {
-    res.status(400);
-    return next({ "signup-errors": errors.array() }); 
+    throw new ValidationError("sign-up has failed due to some errors", errors.array());
   } else {
     next();
   }
@@ -29,19 +31,17 @@ function handleExpressValidationErrors(req, res, next) {
 
 userRouter
   .route("/sign-up")
-  .post((req, res, next) => { console.log("req.body: ", req.body); next(); }, validateUserFields, handleExpressValidationErrors, signUp, login);
+  .post(validateUserFields, handleExpressValidationErrors, signUp);
 
 userRouter
   .route("/login")
-  .post(passport.authenticate('jwt', { session: false }), login);
+  .post(login);
 
+userRouter.delete(
+  "/",
+  passport.authenticate("jwt", { session: false }),
+  deleteUser
+);
 
-// Catch-all for unhandled routes (must be placed last but before error handler)
-userRouter.use((req, res) => {
-  res.status(404).json({
-    status: 'fail',
-    message: `I can't find ${req.originalUrl} on this server!`
-  })
-})
 
 module.exports = userRouter;

@@ -1,4 +1,10 @@
-const { addNewUser } = require("../db/userQueries");
+const {
+  addNewUser,
+  deleteUser: dbDeleteUser,
+  findUserByEmail,
+} = require("../db/userQueries");
+const AppError = require("../errors/AppError");
+const AuthError = require("../errors/AuthError");
 
 require("dotenv").config();
 
@@ -19,36 +25,68 @@ async function signUp (req, res, next) {
       email,
       hashedPassword
     );
-
+    
     if (newUser) {
       req.user = newUser;
       next();
     } else {
-      throw new Error("Failed to create the new user record.")
+      throw new AppError("Failed to create the new user record.", 500)
     }
   } catch (err) {
-    console.log((new Date()).toUTCString(), err);
-    console.log(err.stack);
-    throw (err);
+    throw new AppError('Failed to create the new user record', 500, err.stack, err);
   }
 }
 
 // sample login route /login/:email
-function login(req, res, next) {
+async function login(req, res) {
+  console.log("in login: ", req.body);
+  try {
+    const user = await findUserByEmail(req.body.email);
+    if (!user) {
+      console.log("the user's email is not in the db")
+      throw new AuthError('Incorrect email or password.');
+    } 
+    // confirm password match?
+    
+    const match = await bcrypt.compare(req.body.password, user.password);
+    if (!match) {
+      // passwords do not match!
+      console.log("it's the wrong password");
+      throw new AuthError("Incorrect email or password.");
+    }
+    const token = jwt.sign(
+      {
+        exp: Math.floor(Date.now() / 1000) + 60 * 60,
+        sub: user.id,
+      },
+      process.env.JWT_SECRET
+    );
+    
+    res.set({ Authorization: `Bearer ${token}` });
+    res.status(201).json({ status: 'success', message: "Sign in successful." });
+    
+  } catch (error) {
+    throw new AppError("Failed to access the user record.",500,err.stack, err)
+  }
+}
+
+async function deleteUser (req, res) {
   const user = req.user;
-  const token = jwt.sign(
-    {
-      exp: Math.floor(Date.now() / 1000) + 60 * 60,
-      sub: user.id,
-    },
-    process.env.JWT_SECRET
-  );
   
-  res.set({ Authorization: `Bearer ${token}` });
-  res.status(200).json({ status: 'success', message: "Sign in successful." });
+  try {
+    const deletedUser = await dbDeleteUser(user.id);
+    if (deletedUser) {
+      res.status(200).json({ status: 'success', message: "Delete complete." });
+    } else {
+      throw new AppError('Failed to delete the user records. Contact support.', 500);
+    }
+  } catch (err) {
+    throw new AppError('Failed to delete the user records. Contact support.', 500, err.stack, err);
+  }
 }
 
 module.exports = {
   signUp,
   login,
+  deleteUser,
 };

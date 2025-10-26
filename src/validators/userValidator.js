@@ -1,6 +1,5 @@
 
 const { findUser } = require("../db/userQueries");
-
 const { body } = require("express-validator");
 
 const validateUserFields = [
@@ -62,7 +61,6 @@ const validateUserFields = [
     }
   }),
 ];
-
 
 module.exports = {
   validateUserFields,

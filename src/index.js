@@ -1,5 +1,5 @@
 const express = require("express");
-
+const AppError = require("./errors/AppError");
 // used to create salts or tokens 
 // const crypto = require("crypto");
 
@@ -20,13 +20,13 @@ const cloudinary = require("cloudinary").v2;
 
 function setupCloudinary() {
   console.log("Setting up Cloudinary");
-
+  
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
-
+  
   // Log the configuration
   console.log(cloudinary.config());
 }
@@ -62,23 +62,31 @@ app.use((req, res) => {
 // catch-all for errors
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  if (res.status === 401) {
-    console.log('user tried to do something without being authenticated, tell them!')
+  if (typeof err === AppError) {
+    {
+      res.status = err.statusCode;
+      if (typeof err === ValidationError) {
+        res.json({ timestamp: err.timestamp, message: err.details })
+      } else {
+        res.json({ timestamp: err.timestamp, message: res.message })
+      }
+      console.log(err, err.stack)
+    }
+    const timestamp = new Date().toUTCString;
+    console.log("================================================")
+    console.error('in the catch-all: ', timestamp, err, err.stack)
+    if (res.statusCode < 400) {
+      res.status(500);
+      console.log("TODO: fix up whomever sent this error up here without setting the status?")
+      res.json({
+        timestamp,
+        message: "Internal Server Error. Contact support if this error persists.",
+      });
+    } else {
+      res.json({ timestamp, ...err });
+    }
   }
-  const timestamp = new Date().toUTCString;
-  console.log("================================================")
-  console.error('in the catch-all: ', timestamp, err, err.stack)
-  if (res.statusCode < 400) {
-    res.status(500);
-    console.log("TODO: fix up whomever sent this error up here without setting the status?")
-    res.json({
-      message: "Internal Server Error. Contact support if this error persists.",
-      timestamp
-    });
-  } else {
-    res.json({ timestamp, ...err });
-  }
-})
+});
 
 const port = process.env.PORT || 3000
 
