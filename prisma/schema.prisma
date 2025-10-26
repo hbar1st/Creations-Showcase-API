@@ -21,7 +21,7 @@ model User {
   firstname String @db.VarChar(25)
   lastname  String @db.VarChar(50)
   nickname  String @db.VarChar(25)
-  password  String @db.VarChar(255)
+  password  String @db.VarChar(60)
 
   comments  Comment[]
   projects  Project[]

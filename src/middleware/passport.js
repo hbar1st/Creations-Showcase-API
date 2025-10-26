@@ -1,53 +1,47 @@
 const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
-const { findUser, findUserById } = require("../db/userQueries");
-const bcrypt = require("bcrypt");
+
+// used to create salts or tokens 
+const crypto = require("crypto");
+require("dotenv").config();
+
+const JwtStrategy = require("passport-jwt").Strategy;
+const ExtractJwt = require("passport-jwt").ExtractJwt;
+
+const { findUserById } = require("../db/userQueries");
+
+const jwtopts = {};
+jwtopts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+if (!process.env.JWT_SECRET) {
+  console.log("found no jwt secret in .env, so must create one");
+  const b = crypto.randomBytes(33); // any number over 32 is fine
+  console.log(
+    `Setup the JWT_SECRET value in .env with: ${b.toString("hex")}`
+  );
+
+  throw new Error("Failed to find a jwt secret in .env");
+}
+jwtopts.secretOrKey = process.env.JWT_SECRET;
 
 passport.use(
-  new LocalStrategy(
-    {
-      usernameField: "email", // This tells Passport to look for 'email' in the request body
-      passwordField: "password",
-    },
-    async function verify(email, password, done) {
-      console.log("trying to authenticate: ", email, password);
+  new JwtStrategy(jwtopts, async function (jwt_payload, done) {
+    console.log("passport authentication will use this payload value: ", jwt_payload.sub);
+    if (jwt_payload.sub) {
       try {
-        const user = await findUser(email);
-        if (user === null) {
-          console.log("it's the wrong email address");
-          return done(null, false, { message: "Incorrect email address." });
+        const user = await findUserById(jwt_payload.sub);
+    
+        if (user) {
+          return done(null, user);
+        } else {
+          return done(null, false);
+          // or you could create a new account ?
         }
-
-        const match = await bcrypt.compare(password, user.password);
-
-        if (!match) {
-          // passwords do not match!
-          console.log("it's the wrong password");
-          return done(null, false, { message: "Incorrect password" });
-        }
-
-        return done(null, user);
       } catch (err) {
         return done(err);
       }
+    } else {
+      return done(null, false);
     }
-  )
+  })
 );
-
-passport.serializeUser((user, cb) => {
-  console.log("in serializeUser:", user);
-  cb(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
-  console.log("in deserializeUser: ", id);
-  try {
-    const user = await findUserById(id);
-
-    done(null, user);
-  } catch (err) {
-    done(err);
-  }
-});
 
 module.exports = passport;

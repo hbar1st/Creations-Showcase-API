@@ -12,6 +12,8 @@ const {
 
 const { validateUserFields } = require("../validators/userValidator");
 
+const passport = require("passport");
+
 function handleExpressValidationErrors(req, res, next) {
   const errors = validationResult(req);
 
@@ -27,13 +29,19 @@ function handleExpressValidationErrors(req, res, next) {
 
 userRouter
   .route("/sign-up")
-  .post((req, res, next) => { console.log("req.body: ", req.body); next(); }, validateUserFields, handleExpressValidationErrors, signUp);
+  .post((req, res, next) => { console.log("req.body: ", req.body); next(); }, validateUserFields, handleExpressValidationErrors, signUp, login);
 
 userRouter
   .route("/login")
-  .post(login);
+  .post(passport.authenticate('jwt', { session: false }), login);
 
 
-userRouter.get("/logout", logout);
+// Catch-all for unhandled routes (must be placed last but before error handler)
+userRouter.use((req, res) => {
+  res.status(404).json({
+    status: 'fail',
+    message: `I can't find ${req.originalUrl} on this server!`
+  })
+})
 
 module.exports = userRouter;

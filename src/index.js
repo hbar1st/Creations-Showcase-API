@@ -1,26 +1,27 @@
 const express = require("express");
 
 // used to create salts or tokens 
-const crypto = require("crypto");
+// const crypto = require("crypto");
 
-const passport = require("./middleware/passport");
+//const passport = require("./middleware/passport");
 
-const path = require("node:path");
+//const path = require("node:path");
 require("dotenv").config();
-
 
 const app = express();
 
 // allow express to parse the request body
 app.use(express.urlencoded({ extended: true })) 
 
+app.use(express.json());
+
 // use cloudinary to upload project images
 const cloudinary = require("cloudinary").v2;
 
-async function setupCloudinary() {
+function setupCloudinary() {
   console.log("Setting up Cloudinary");
 
-  await cloudinary.config({
+  cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
@@ -31,31 +32,22 @@ async function setupCloudinary() {
 }
 setupCloudinary();
 
+// need to initialize passport 
+const passport = require("./middleware/passport");
+app.use(passport.initialize());
 
-const MS_IN_24_HRS = 1000 * 60 * 60 * 24; // 24 hours in milliseconds
-
-// eslint-disable-next-line no-undef
-if (!process.env.SECRET_TOKEN) {
-  console.log("found no session secret in .env, so must create one");
-  const b = crypto.randomBytes(40); // any number over 32 is fine
-  console.log(
-    `Setup the SECRET_TOKEN value in .env with: ${b.toString("hex")}`
-  );
-  throw new Error("Failed to find a session secret in .env");
-}
-
-
-//app.use(passport.session());
-
+// set up the locals currentUser value before we do any rendering?? (not useful in a REST api? // TODO check into this - maybe not needed)
 app.use((req, res, next) => {
   res.locals.currentUser = req.user;
   next();
 });
 
+// TODO setup the root route to explain the api? Think about it (refer to other apis you've used before)
 app.get("/", (req, res) => {
   res.send("The Creations Showcase API is an API that lets you showcase your web development projects and receive feedback on them.");
 });
 
+// userRouter has the routes that are not strictly REST but needed for login/signup/logout
 const userRouter = require("./routers/userRouter");
 app.use("/user", userRouter);
 
@@ -75,7 +67,7 @@ app.use((err, req, res, next) => {
   }
   const timestamp = new Date().toUTCString;
   console.log("================================================")
-  console.error('in the catch-all: ', err, err.stack)
+  console.error('in the catch-all: ', timestamp, err, err.stack)
   if (res.statusCode < 400) {
     res.status(500);
     console.log("TODO: fix up whomever sent this error up here without setting the status?")

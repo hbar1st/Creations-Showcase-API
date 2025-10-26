@@ -2,7 +2,7 @@ const prisma = require("../middleware/prisma.mjs");
 
 // run inside `async` function
 async function addNewUser(firstname, lastname, nickname, email, password) {
-  const newUser = await prisma.user.create({
+  const newUser = await prisma.default.user.create({
     data: {
       firstname,
       lastname,
@@ -15,8 +15,8 @@ async function addNewUser(firstname, lastname, nickname, email, password) {
 }
 
 async function findUser(email) {
-  console.log("in findUser: ", email); 
-  const user = await prisma.users.findFirst({
+  console.log("in findUser: ", email);  
+  const user = await prisma.default.user.findFirst({
     where: {
       email,
     },
@@ -28,9 +28,21 @@ async function findUser(email) {
 async function findUserById(id) {
   console.log("in findUserById: ", id);
   // By unique identifier
-  const user = await prisma.user.findFirst({
+  const user = await prisma.default.user.findFirst({
     where: {
-      id,
+      id: Number(id),
+    },
+  });
+  console.log("return user: ", user);
+  return user;
+}
+
+async function findUserByEmail(id) {
+  console.log("in findUserByEmail: ", id);
+  // By unique identifier
+  const user = await prisma.default.user.findFirst({
+    where: {
+      email,
     },
   });
   console.log("return user: ", user);
@@ -41,4 +53,5 @@ module.exports = {
   addNewUser,
   findUser,
   findUserById,
+  findUserByEmail,
 };
