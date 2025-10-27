@@ -60,6 +60,7 @@ async function deleteUser(id) {
   return user;
 }
 
+// values should be an object of key-value pairs that match with the users table
 async function updateUser(id, values) {
   console.log("in updateUser:", values);
   const user = await prisma.default.user.update({
@@ -68,6 +69,7 @@ async function updateUser(id, values) {
     },
     data: values
   })
+  return user;
 }
 
 module.exports = {

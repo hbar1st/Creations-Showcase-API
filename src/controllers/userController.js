@@ -13,10 +13,41 @@ require("dotenv").config();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken"); 
 
-function updateUser(req, res, next) {
+async function updateUser(req, res, next) {
   // if user wants to change the password, we need to re-hash it before storing it
   // other values the user may change are: email/nickname/firstname/lastname/nickname
   
+  const user = req.user;
+  console.log("in updateUser: ", user, req.body);
+  const userDetails = { ...req.body };
+  if (Object.hasOwn(userDetails, 'confirm-password')) {
+    delete userDetails['confirm-password']
+  }
+  if (Object.hasOwn(userDetails, 'password')) {
+    // user wants to change the password (I guess normally we'd ask for the old password, but I'm relying on jwt token here for security)
+    userDetails.password = await bcrypt.hash(
+      req.body.password,
+      Number(process.env.HASH_SALT)
+    );
+  }
+  try {
+    console.log("user update details: ", userDetails)
+    const updatedUser = await dbUpdateUser(user.id, userDetails)
+    console.log("updatedUser: ", updatedUser);
+    if (updatedUser) {
+      res
+        .status(200)
+        .json({ status: "success", message: "Update successful." });
+    } else {
+      throw new AppError("Failed to update the user record", 500);
+    }
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    } else {
+      throw new AppError("Failed to update the user record", 500, error);
+    }
+  }
 }
 
 async function signUp (req, res, next) {
@@ -40,8 +71,12 @@ async function signUp (req, res, next) {
     } else {
       throw new AppError("Failed to create the new user record.", 500)
     }
-  } catch (err) {
-    throw new AppError('Failed to create the new user record', 500, err);
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    } else {
+      throw new AppError("Failed to update the user record", 500, err);
+    }
   }
 }
 
@@ -55,7 +90,6 @@ async function login(req, res) {
       throw new AuthError('Incorrect email or password.');
     } 
     // confirm password match?
-    
     const match = await bcrypt.compare(req.body.password, user.password);
     if (!match) {
       // passwords do not match!
@@ -74,7 +108,11 @@ async function login(req, res) {
     res.status(201).json({ status: 'success', message: "Login successful." });
     
   } catch (error) {
-    throw new AppError("Failed to access the user record.",500, err)
+    if (error instanceof AppError) {
+      throw error;
+    } else {
+      throw new AppError("Failed to update the user record", 500, error);
+    }
   }
 }
 
@@ -89,12 +127,17 @@ async function deleteUser (req, res) {
       throw new AppError('Failed to delete the user records. Contact support.', 500);
     }
   } catch (err) {
-    throw new AppError('Failed to delete the user records. Contact support.', 500, err);
+    if (error instanceof AppError) {
+      throw error;
+    } else {
+      throw new AppError("Failed to update the user record", 500, error);
+    }
   }
 }
 
 module.exports = {
   signUp,
   login,
+  updateUser,
   deleteUser,
 };

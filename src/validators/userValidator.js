@@ -1,6 +1,6 @@
 
 const { findUser } = require("../db/userQueries");
-const { body } = require("express-validator");
+const { body, checkExact } = require("express-validator");
 
 const checkNickname = (optional) => {
   let ch1 = body("nickname").trim();
@@ -75,12 +75,12 @@ const checkPassword = (optional) => {
     .withMessage(
       "A minimum length of 8 characters is needed for the password. Ideally, aim to use 15 characters at least."
     )
+    .hide("*****");
 }
 
 
-const checkPasswordConfirmation = (optional) => {
-  let ch1 = body("confirm-password").trim()
-  ch1 = optional ? ch1.optional({ checkFalsy: true }) : ch1;
+const checkPasswordConfirmation = () => {
+  let ch1 = body("confirm-password").if(body("password").notEmpty()).trim();
   return ch1
     .notEmpty()
     .withMessage("A password confirmation is required.")
@@ -94,25 +94,34 @@ const checkPasswordConfirmation = (optional) => {
         return true;
       }
     })
+    .hide('*****');
 }
 
+// used for user updates
 const validateOptionalUserFields = [
-  checkNickname(true),
-  checkEmail(true),
-  checkFirstname(true),
-  checkLastname(true),
-  checkPassword(true),
-  checkPasswordConfirmation(true),
+  checkExact(
+    [
+      checkNickname(true),
+      checkEmail(true),
+      checkFirstname(true),
+      checkLastname(true),
+      checkPassword(true),
+      checkPasswordConfirmation(),
+    ],
+    {
+      message: "Too many fields specified.",
+    }
+  ),
 ];
 
-
+// used for creating a new user
 const validateUserFields = [
   checkNickname(false),
   checkEmail(false),
   checkFirstname(false),
   checkLastname(false),
   checkPassword(false),
-  checkPasswordConfirmation(false),
+  checkPasswordConfirmation(),
 ];
 
 module.exports = {
