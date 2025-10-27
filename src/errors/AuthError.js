@@ -5,3 +5,5 @@ class AuthError extends AppError {
     super(message, 401);
   }
 }
+
+module.exports = AuthError;

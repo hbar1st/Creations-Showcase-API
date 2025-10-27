@@ -7,3 +7,5 @@ class ValidationError extends AppError {
     this.details = details; // Additional validation details
   }
 }
+
+module.exports = ValidationError;

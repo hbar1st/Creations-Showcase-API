@@ -60,10 +60,21 @@ async function deleteUser(id) {
   return user;
 }
 
+async function updateUser(id, values) {
+  console.log("in updateUser:", values);
+  const user = await prisma.default.user.update({
+    where: {
+      id: Number(id)
+    },
+    data: values
+  })
+}
+
 module.exports = {
   addNewUser,
   findUser,
   findUserById,
   findUserByEmail,
   deleteUser,
+  updateUser,
 };

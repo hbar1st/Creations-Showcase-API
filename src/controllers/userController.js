@@ -2,7 +2,9 @@ const {
   addNewUser,
   deleteUser: dbDeleteUser,
   findUserByEmail,
+  updateUser: dbUpdateUser,
 } = require("../db/userQueries");
+
 const AppError = require("../errors/AppError");
 const AuthError = require("../errors/AuthError");
 
@@ -10,6 +12,12 @@ require("dotenv").config();
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken"); 
+
+function updateUser(req, res, next) {
+  // if user wants to change the password, we need to re-hash it before storing it
+  // other values the user may change are: email/nickname/firstname/lastname/nickname
+  
+}
 
 async function signUp (req, res, next) {
   const hashedPassword = await bcrypt.hash(
@@ -28,12 +36,12 @@ async function signUp (req, res, next) {
     
     if (newUser) {
       req.user = newUser;
-      next();
+      res.status(201).json({ status: 'success', message: "Sign up successful." });
     } else {
       throw new AppError("Failed to create the new user record.", 500)
     }
   } catch (err) {
-    throw new AppError('Failed to create the new user record', 500, err.stack, err);
+    throw new AppError('Failed to create the new user record', 500, err);
   }
 }
 
@@ -63,10 +71,10 @@ async function login(req, res) {
     );
     
     res.set({ Authorization: `Bearer ${token}` });
-    res.status(201).json({ status: 'success', message: "Sign in successful." });
+    res.status(201).json({ status: 'success', message: "Login successful." });
     
   } catch (error) {
-    throw new AppError("Failed to access the user record.",500,err.stack, err)
+    throw new AppError("Failed to access the user record.",500, err)
   }
 }
 
@@ -81,7 +89,7 @@ async function deleteUser (req, res) {
       throw new AppError('Failed to delete the user records. Contact support.', 500);
     }
   } catch (err) {
-    throw new AppError('Failed to delete the user records. Contact support.', 500, err.stack, err);
+    throw new AppError('Failed to delete the user records. Contact support.', 500, err);
   }
 }
 

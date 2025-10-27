@@ -1,6 +1,10 @@
 # Creations-Showcase-API
 My version of TOP's blog api project but instead of a blog, it allows creators to showcase their web dev projects
 
+
+ToDo
+[ ] go through your todos in the code
+
 Some links I used during development:
 
 node-jsonwebtoken github: https://github.com/auth0/node-jsonwebtoken#readme
@@ -9,6 +13,7 @@ passport-jwt githbu: https://github.com/mikenicholson/passport-jwt
 
 node_jwt_example https://github.com/bradtraversy/node_jwt_example/blob/master/app.js
 
+REST api best practices article: https://stackoverflow.blog/2020/03/02/best-practices-for-rest-api-design#h-nesting-resources-for-hierarchical-objects
 
 Some notes on how user roles work in this api.
 There are 2 roles. The main role is User which is anyone who is signed up with this api.

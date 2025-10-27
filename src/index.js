@@ -1,14 +1,22 @@
 const express = require("express");
-const AppError = require("./errors/AppError");
-// used to create salts or tokens 
-// const crypto = require("crypto");
-
-//const passport = require("./middleware/passport");
-
-//const path = require("node:path");
+const cors = require("cors");
 require("dotenv").config();
 
+const AppError = require("./errors/AppError");
+const ValidationError = require("./errors/ValidationError");
+
 const app = express();
+
+// configure cors // TODO read this to setup https://expressjs.com/en/resources/middleware/cors.html#enabling-cors-pre-flight:~:text=%27)%0A%7D)-,Configuring%20CORS,-See%20the%20configuration
+/*
+const corsOptions = {
+origin: "http://example.com",
+optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+*/
+
+// enable cors on all routes for now // TODO restrict to your actual client apps
+app.use(cors());
 
 // allow express to parse the request body
 app.use(express.urlencoded({ extended: true })) 
@@ -59,32 +67,44 @@ app.use((req, res) => {
   })
 })
 
+const INTERNAL_ERROR = "Internal Server Error. Contact support if this error persists."
+
 // catch-all for errors
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  if (typeof err === AppError) {
-    {
-      res.status = err.statusCode;
-      if (typeof err === ValidationError) {
-        res.json({ timestamp: err.timestamp, message: err.details })
-      } else {
-        res.json({ timestamp: err.timestamp, message: res.message })
+  
+  const timestamp = new Date().toUTCString;
+  try {
+    console.log("================================================");
+    console.error("in the catch-all: ", timestamp, err, err.stack);
+    if (err instanceof AppError) {
+      {
+        res.status(err.statusCode);
+        if (err instanceof ValidationError) {
+          res.json({ timestamp: err.timestamp, message: err.details })
+        } else {
+          res.json({ timestamp: err.timestamp, message: err.message })
+        }
+        console.log(err, err.stack)
+      } 
+      if (res.statusCode < 400) {
+        res.status(500);
+        console.log("TODO: fix up whomever sent this error up here without setting the status?")
+        res.json({
+          timestamp,
+          message: INTERNAL_ERROR
+        });
+      } else if (!(err instanceof AppError)) {
+        res.json({ timestamp, message: [...err] });
       }
-      console.log(err, err.stack)
-    }
-    const timestamp = new Date().toUTCString;
-    console.log("================================================")
-    console.error('in the catch-all: ', timestamp, err, err.stack)
-    if (res.statusCode < 400) {
-      res.status(500);
-      console.log("TODO: fix up whomever sent this error up here without setting the status?")
-      res.json({
-        timestamp,
-        message: "Internal Server Error. Contact support if this error persists.",
-      });
     } else {
-      res.json({ timestamp, ...err });
+      console.log(err, err.stack);
+      res.status(500).json({timestamp, message: INTERNAL_ERROR})
     }
+  } catch (error) {
+    // don't let any error pass thru!
+    console.log(error, error.stack);
+    res.status(500).json({ timestamp, message: INTERNAL_ERROR });
   }
 });
 
