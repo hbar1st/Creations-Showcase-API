@@ -4,6 +4,7 @@ My version of TOP's blog api project but instead of a blog, it allows creators t
 
 ToDo
 [ ] go through your todos in the code
+[ ] When the user logs out, you can have the client remove the JWT from storage.
 
 Some links I used during development:
 
@@ -26,6 +27,7 @@ Current plan for routes in this api.
 
 GET routes:
 
+/user (this one gets the current user's nickname/email/etc)
 /projects
 /project/:pid
 /project/:pid/interactions

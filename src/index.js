@@ -16,7 +16,13 @@ optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) chok
 */
 
 // enable cors on all routes for now // TODO restrict to your actual client apps
-app.use(cors());
+app.use(
+  cors({
+    origin: "*", 
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Type", "Authorization"]
+  })
+);
 
 // allow express to parse the request body
 app.use(express.urlencoded({ extended: true })) 
@@ -59,6 +65,9 @@ app.get("/", (req, res) => {
 const userRouter = require("./routers/userRouter");
 app.use("/user", userRouter);
 
+const projectRouter = require("./routers/projectRouter")
+app.use("/projects", projectRouter)
+
 // Catch-all for unhandled routes (must be placed last but before error handler)
 app.use((req, res) => {
   res.status(404).json({
@@ -72,8 +81,8 @@ const INTERNAL_ERROR = "Internal Server Error. Contact support if this error per
 // catch-all for errors
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  
   const timestamp = new Date().toUTCString;
+  res.set({ "Content-Type": "application/problem+json" }); // this type from https://datatracker.ietf.org/doc/html/rfc7807#section-3
   try {
     console.log("================================================");
     console.error("in the catch-all: ", timestamp, err, err.stack);
@@ -81,25 +90,27 @@ app.use((err, req, res, next) => {
       {
         res.status(err.statusCode);
         if (err instanceof ValidationError) {
-          res.json({ timestamp: err.timestamp, message: err.details })
+          res.json({ timestamp: err.timestamp, message: err.message, details: err.details });
         } else {
-          res.json({ timestamp: err.timestamp, message: err.message })
+          res.json({ timestamp: err.timestamp, message: err.message });
         }
-        console.log(err, err.stack)
-      } 
+        console.log(err, err.stack);
+      }
       if (res.statusCode < 400) {
         res.status(500);
-        console.log("TODO: fix up whomever sent this error up here without setting the status?")
+        console.log(
+          "TODO: fix up whomever sent this error up here without setting the status?"
+        );
         res.json({
           timestamp,
-          message: INTERNAL_ERROR
+          message: INTERNAL_ERROR,
         });
       } else if (!(err instanceof AppError)) {
         res.json({ timestamp, message: [...err] });
       }
     } else {
       console.log(err, err.stack);
-      res.status(500).json({timestamp, message: INTERNAL_ERROR})
+      res.status(500).json({ timestamp, message: INTERNAL_ERROR });
     }
   } catch (error) {
     // don't let any error pass thru!

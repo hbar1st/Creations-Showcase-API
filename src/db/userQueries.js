@@ -1,7 +1,7 @@
-const { PrismaClient } = require("../generated/prisma/client");
+//const { PrismaClient } = require("../generated/prisma/client");
 const prisma = require("../middleware/prisma.mjs");
 
-// run inside `async` function
+
 async function addNewUser(firstname, lastname, nickname, email, password) {
   const newUser = await prisma.default.user.create({
     data: {
@@ -26,6 +26,11 @@ async function findUser(email) {
   return user;
 }
 
+/**
+ * Will include a field to reflect if the user is also an author or not
+ * @param {*} id 
+ * @returns 
+ */
 async function findUserById(id) {
   console.log("in findUserById: ", id);
   // By unique identifier

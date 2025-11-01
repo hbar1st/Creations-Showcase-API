@@ -8,10 +8,30 @@ const {
 const AppError = require("../errors/AppError");
 const AuthError = require("../errors/AuthError");
 
+// needed to read the hash salt value
 require("dotenv").config();
 
+// needed to hash the password value
 const bcrypt = require("bcrypt");
+
+// needed to authenticate the requests
 const jwt = require("jsonwebtoken"); 
+
+
+async function getUser(req, res, next) {
+  console.log("in getUser")
+  const user = req.user;
+  // remove id and password before sending on
+  delete user.password;
+  delete user.id;
+  if (user) {
+    res
+    .status(200)
+    .json({ status: "success", user });
+  } else {
+    throw new AppError("Failed to get the user record", 500);
+  }
+}
 
 async function updateUser(req, res, next) {
   // if user wants to change the password, we need to re-hash it before storing it
@@ -36,8 +56,8 @@ async function updateUser(req, res, next) {
     console.log("updatedUser: ", updatedUser);
     if (updatedUser) {
       res
-        .status(200)
-        .json({ status: "success", message: "Update successful." });
+      .status(200)
+      .json({ status: "success", message: "Update successful." });
     } else {
       throw new AppError("Failed to update the user record", 500);
     }
@@ -105,6 +125,9 @@ async function login(req, res) {
     );
     
     res.set({ Authorization: `Bearer ${token}` });
+    //res.json({ token });
+    res.set("Access-Control-Expose-Headers", "Authorization");
+    
     res.status(201).json({ status: 'success', message: "Login successful." });
     
   } catch (error) {
@@ -138,6 +161,7 @@ async function deleteUser (req, res) {
 module.exports = {
   signUp,
   login,
+  getUser,
   updateUser,
   deleteUser,
 };

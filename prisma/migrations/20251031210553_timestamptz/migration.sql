@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "projects" ALTER COLUMN "published" SET DATA TYPE TIMESTAMPTZ;
