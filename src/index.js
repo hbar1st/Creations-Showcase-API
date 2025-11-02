@@ -90,9 +90,9 @@ app.use((err, req, res, next) => {
       {
         res.status(err.statusCode);
         if (err instanceof ValidationError) {
-          res.json({ timestamp: err.timestamp, message: err.message, details: err.details });
+          res.json({ statusCode: err.statusCode, timestamp: err.timestamp, message: err.message, details: err.details });
         } else {
-          res.json({ timestamp: err.timestamp, message: err.message });
+          res.json({ statusCode: err.statusCode, timestamp: err.timestamp, message: err.message });
         }
         console.log(err, err.stack);
       }
@@ -102,6 +102,7 @@ app.use((err, req, res, next) => {
           "TODO: fix up whomever sent this error up here without setting the status?"
         );
         res.json({
+          statusCode: 500,
           timestamp,
           message: INTERNAL_ERROR,
         });

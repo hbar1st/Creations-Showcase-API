@@ -56,7 +56,7 @@ const checkEmail = (optional) => {
       const userRow = await findUser(value);
       
       console.log("user row found: ", userRow);
-      if (userRow) {
+      if (userRow && !optional) {
         throw new Error(
           "This email has already been registered. You must login instead."
         );
