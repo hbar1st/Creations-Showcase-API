@@ -15,14 +15,16 @@ async function addNewUser(firstname, lastname, nickname, email, password) {
   return newUser;
 }
 
-async function findUser(email) {
-  console.log("in findUser: ", email);  
+
+async function findUserByEmail(email) {
+  console.log("in findUserByEmail: ", email);
+  // By unique identifier
   const user = await prisma.default.user.findFirst({
     where: {
       email,
     },
   });
-  console.log("rows found: ", user);
+  console.log("return user: ", user);
   return user;
 }
 
@@ -43,15 +45,25 @@ async function findUserById(id) {
   return user;
 }
 
-async function findUserByEmail(email) {
-  console.log("in findUserByEmail: ", email);
-  // By unique identifier
+/**
+ * looks for another user with the same email
+ * @param {} id 
+ * @returns 
+ */
+async function findOtherUser(id, email) {
+  console.log("in findOtherUser: ", id, email)
   const user = await prisma.default.user.findFirst({
     where: {
-      email,
-    },
-  });
-  console.log("return user: ", user);
+      AND: [
+        { email },
+        {
+          id: {
+            not: Number(id)
+          }
+        }
+      ]
+    }
+  })
   return user;
 }
 
@@ -79,7 +91,8 @@ async function updateUser(id, values) {
 
 module.exports = {
   addNewUser,
-  findUser,
+  
+  findOtherUser,
   findUserById,
   findUserByEmail,
   deleteUser,

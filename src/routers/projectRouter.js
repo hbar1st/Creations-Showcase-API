@@ -1,8 +1,8 @@
 // Routes belonging to /projects
 
 const { Router } = require("express");
-const { getUserProjects, addProject } = require("../controllers/projectController")
-const { validateProjectFields } = require("../validators/projectValidator")
+const { getUserProjects, addProject, addImageToProject } = require("../controllers/projectController")
+const { validateProjectFields, validateImageFields } = require("../validators/projectValidator")
 
 
 const { handleExpressValidationErrors } = require("./routerUtil");
@@ -15,10 +15,16 @@ const projectRouter = Router();
 projectRouter
   .route("/")
   .get(passport.authenticate("jwt", { session: false }), getUserProjects)
-  .put(
+  .post(
     passport.authenticate("jwt",{ session: false }),
     validateProjectFields,
     handleExpressValidationErrors,
     addProject);
+    // TODO add project delete and project update
 
+projectRouter
+  .route("/:pid/image")
+  .post(passport.authenticate("jwt", { session: false }),  validateImageFields, handleExpressValidationErrors, addImageToProject);
+//TODO add image delete and image update?
+  
 module.exports = projectRouter;

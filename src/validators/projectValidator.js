@@ -1,39 +1,47 @@
+const AuthError = require("../errors/AuthError");
+const AppError = require("../errors/AppError");
+const ValidationError = require("../errors/ValidationError");
 
 const { body, param } = require("express-validator");
 
-const {
-  findAuthorById,
-} = require("../db/projectQueries");
+const { findAuthorById, findProject } = require("../db/projectQueries");
 
-const checkTitle = () => 
-  body('title').trim().notEmpty().withMessage("New projects requires a title.")
-.isLength({max: 100}).withMessage("The title is too long. Use no more than 100 characters.")
+const checkTitle = () =>
+  body("title")
+    .trim()
+    .notEmpty()
+    .withMessage("New projects requires a title.")
+    .isLength({ max: 100 })
+    .withMessage("The title is too long. Use no more than 100 characters.");
 
-
-const checkDescr = () => 
+const checkDescr = () =>
   body("descr")
-.trim()
-.notEmpty()
-.withMessage("New projects require a description.")
+    .trim()
+    .notEmpty()
+    .withMessage("New projects require a description.");
 
+const checkLiveLink = () =>
+  body("live-link")
+    .trim()
+    .optional()
+    .isURL({ protocols: ["http", "https"], require_protocol: true })
+    .withMessage("The live link value is not a valid URL.");
 
-const checkLiveLink = () => 
-  body("live-link").trim().optional().isURL({ protocols: ['http', 'https'], require_protocol: true })
-.withMessage("The live link value is not a valid URL.")
-
-
-const checkRepoLink = () => 
+const checkRepoLink = () =>
   body("repo-link")
-.trim()
-.optional()
-.isURL({ protocols: ["http", "https"], require_protocol: true })
-.withMessage("The repo link value is not a valid URL.")
+    .trim()
+    .optional()
+    .isURL({ protocols: ["http", "https"], require_protocol: true })
+    .withMessage("The repo link value is not a valid URL.");
 
-
-const checkKeywords = () => 
-  body("keywords").trim().optional()
-.isLength({min: 1, max: 100}).withMessage("The keywords fields should not exceed 100 characters in total length.")
-
+const checkKeywords = () =>
+  body("keywords")
+    .trim()
+    .optional()
+    .isLength({ max: 100 })
+    .withMessage(
+      "The keywords fields should not exceed 100 characters in total length."
+    );
 
 /*
 options?: {
@@ -42,49 +50,57 @@ delimiters?: string[];
 strictMode?: boolean;
 }
 */
-const checkPublished = () => 
-  body('published').trim().optional()
-.isDate().withMessage("The published field must be a date field.")
-
+const checkPublished = () =>
+  body("published")
+    .trim()
+    .optional()
+    .isBoolean()
+    .customSanitizer(
+      (value, { req }) => (new Date()).toISOString()
+    )
+    .withMessage("The published field must be a true or false.");
 
 const checkAuthorId = () =>
-  body('authorId')
-.trim()
-.notEmpty()
-.withMessage("New projects require an author.")
-.isInt({ min: 1 })
-.withMessage("Invalid type of author id.")
-.toInt()
-.custom(async (value) => {
-  try {
-    const author = await findAuthorById(value);
-    
-    console.log("author's row found: ", author);
-    if (!author) {
-      throw new Error(
-        "This user id is not authorized to create projects."
-      );
-    } else {
-      return true;
-    }
-  } catch (error) {
-    console.log(error);
-    console.log(error.stack);
-    throw error;
-  }
-})
+  body("authorId")
+    .trim()
+    .notEmpty()
+    .withMessage("New projects require an author.")
+    .isInt({ min: 1 })
+    .withMessage("Invalid type of author id.")
+    .toInt()
+    .custom(async (value) => {
+      try {
+        const author = await findAuthorById(value);
 
+        console.log("author's row found: ", author);
+        if (!author) {
+          throw new ValidationError(
+            "Validation failed", [{path: 'author id', type: 'field', msg: "This user id is not authorized to create projects."}]
+          );
+        } else {
+          return true;
+        }
+      } catch (error) {
+        console.log(error);
+        console.log(error.stack);
+        throw error;
+      }
+    });
+
+    /**
+     * confirm a body is provided and santize authorId to the user's id (from the jwt token)
+     */
 const prevalidation = [
-  body().exists().withMessage("Invalid request. Missing request body.").bail({ level: 'request' }),
-  body('authorId').customSanitizer((value, { req }) => value ?? Number(req.user.id)),
-  (req, res, next) => {
-    console.log("after sanitization: ", req.body),
-    next();
-  }
-]
+  body()
+    .exists()
+    .withMessage("Invalid request. Missing request body.")
+    .bail({ level: "request" }),
+  body("authorId").customSanitizer(
+    (value, { req }) => Number(req.user.id) 
+  ),
+];
 // used for creating a new project
 const validateProjectFields = [
-  
   prevalidation,
   checkAuthorId(),
   checkTitle(),
@@ -93,9 +109,40 @@ const validateProjectFields = [
   checkRepoLink(),
   checkKeywords(),
   checkPublished(),
-]
+];
+
+const validateImageFields = [
+  param("pid")
+    .trim()
+    .notEmpty()
+    .withMessage("Project id is missing. Cannot upload without it.")
+    .customSanitizer((value) => Number(value))
+    .custom(async (value, {req}) => {
+      try {
+        const project = await findProject(value);
+
+        console.log("project's row found: ", project);
+        if (!project) {
+          throw new AuthError(
+            "This project id doesn't exist."
+          );
+        } else {
+          // check that this project belongs to the current user
+          if (project.authorId === req.user.id) {
+            return true;
+          } else {
+            throw new ValidationError("Project permissions unavailable.",[])
+          }
+        }
+      } catch (error) {
+        console.log(error);
+        console.log(error.stack);
+        throw error;
+      }
+    }),
+];
 
 module.exports = {
   validateProjectFields,
+  validateImageFields,
 };
-

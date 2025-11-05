@@ -62,14 +62,14 @@ model Project {
 model Image {
   id        Int     @id @default(autoincrement())
   name      String  @db.VarChar(100)
-  public_id Int     @unique
+  public_id String  @unique
   type      String  @db.VarChar(50)
   url       String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId Int
 
   @@unique([name, projectId])
-  @@map(name: "project_images")
+  @@map(name: "images")
 }
 
 model Comment {

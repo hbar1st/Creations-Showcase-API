@@ -1,5 +1,5 @@
 
-const { findUser } = require("../db/userQueries");
+const { findOtherUser, findUserByEmail } = require("../db/userQueries");
 const { body, param, checkExact } = require("express-validator");
 
 /**
@@ -50,15 +50,16 @@ const checkEmail = (optional) => {
   .withMessage("An email is required.")
   .isEmail()
   .withMessage("Provide a valid email address.")
-  .custom(async (value) => {
+  .custom(async (value, {req}) => {
     console.log("try to validate if the email is unique: ", value);
     try {
-      const userRow = await findUser(value);
+
+      const userRow = optional ? await findOtherUser(req.user.id, value) : await findUserByEmail(value);
       
       console.log("user row found: ", userRow);
-      if (userRow && !optional) {
+      if (userRow) {
         throw new Error(
-          "This email has already been registered. You must login instead."
+          optional ? "This email address cannot be used" : "This email has already been registered. You must login instead."
         );
       } else {
         return true;

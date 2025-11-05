@@ -45,6 +45,7 @@ PUT routes:
 
 /user
 /project
+/projects/:pid/image
 /comment
 
 DELETE routes:
