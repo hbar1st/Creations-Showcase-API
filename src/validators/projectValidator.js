@@ -60,6 +60,38 @@ const checkPublished = () =>
     )
     .withMessage("The published field must be a true or false.");
 
+const checkProjectIdStrict = checkProjectId(true);
+
+function checkProjectId(strict = false) {
+  return param('pid').trim().notEmpty().withMessage("Project id is missing.")
+    .isInt({ min: 1 }).withMessage("Projoect id's value is nvalid.")
+    .toInt()
+    .custom(async (value, { req }) => {
+      //confirm project exists with the current user's author id, otherwise, this is invalid
+      try {
+        const project = await findProject(value);
+
+        if (!project) {
+          throw new ValidationError("Invalid project id", [
+            {
+              path: "projectId",
+              type: "field",
+              msg: "Cannot find this project",
+            },
+          ]);
+        }
+        if (strict && project.authorId !== req.user.id) {
+          throw new AuthError("Insufficient authority over project");
+        }
+        return true;
+      } catch (error) {
+        console.log(error);
+        console.log(error.stack);
+        throw error;
+      }
+    });
+  }
+
 const checkAuthorId = () =>
   body("authorId")
     .trim()
@@ -145,4 +177,6 @@ const validateImageFields = [
 module.exports = {
   validateProjectFields,
   validateImageFields,
+  checkProjectId,
+  checkProjectIdStrict,
 };

@@ -28,10 +28,11 @@ Current plan for routes in this api.
 GET routes:
 
 /user (this one gets the current user's nickname/email/etc)
-/projects
-/project/:pid
-/project/:pid/interactions
-/project/:pid/comment/:cid
+/projects (gets all projects - unauthenticated access)
+/projects/user (gets the specific user's projects - authenticated by jwt)
+/project/:pid (gets a project - unauthenticated access)
+/project/:pid/interactions (gets a project's interactions - unauthenticated access)
+/project/:pid/comment/:cid (gets a project's comments - unauthenticated access)
 
 POST routes:
 

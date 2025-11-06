@@ -20,10 +20,11 @@ const jwt = require("jsonwebtoken");
 
 async function getUser(req, res, next) {
   console.log("in getUser")
-  const user = req.user;
+  const user = { ...req.user };
   // remove id and password before sending on
   delete user.password;
   delete user.id;
+  console.log(user);
   if (user) {
     res
     .status(200)

@@ -60,6 +60,31 @@ async function findProject(projectId) {
   })
   return project;
 }
+
+/**
+* get the project by pid and authorID and all its likes/comments/viewCounts
+ * @param {*} authorId 
+ * @param {*} projectId 
+ * @returns 
+ */
+async function getProjectByAuthor(authorId, projectId) {
+  console.log("in getProjectByAuthor: ", authorId, projectId);
+
+  const project = await prisma.default.project.findUnique({
+    where: {
+      id: Number(projectId),
+      authorId: Number(authorId)
+    },
+    include: {
+      images: true,
+      likes: true,
+      comments: true,
+    },
+  });
+
+  console.log("return project: ", project);
+  return project;
+}
 /**
  * get the project and all its likes/comments/viewCounts
  * @param {*} projectId
@@ -80,7 +105,6 @@ async function getProjectById(projectId) {
   console.log("return project: ", project);
   return project;
 }
-
 /**
  * Will try to confirm if the id is a user who is also an author
  * @param {*} id
@@ -98,7 +122,27 @@ async function findAuthorById(id) {
   return author;
 }
 
-
+async function upsertImage(projectId, name, public_id, type, url) {
+  console.log("in updateImage: ", projectId, name, public_id, type, url);
+  const image = await prisma.default.image.upsert({
+    where: {
+      public_id,
+    },
+    update: {
+      name,
+      type,
+      url,
+    },
+    create: {
+      projectId,
+      name,
+      public_id,
+      type,
+      url,
+    },
+  });
+  return image;
+}
 async function addNewImage(projectId, name, public_id, type, url) {
   console.log("in addNewImage: ", projectId, name, public_id, type, url);
 
@@ -128,9 +172,11 @@ module.exports = {
   getProjectImage,
   addNewProject,
   getProjectById,
+  getProjectByAuthor,
   findProject,
   findAuthorById,
   addNewImage,
+  upsertImage,
   /*
   deleteProject,
   getAllProjects,

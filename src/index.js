@@ -94,7 +94,6 @@ app.use((err, req, res, next) => {
         } else {
           res.json({ statusCode: err.statusCode, timestamp: err.timestamp, message: err.message });
         }
-        console.log(err, err.stack);
       }
       if (res.statusCode < 400) {
         res.status(500);
@@ -107,15 +106,13 @@ app.use((err, req, res, next) => {
           message: INTERNAL_ERROR,
         });
       } else if (!(err instanceof AppError)) {
-        res.json({ timestamp, message: [...err] });
+        res.status(500).json({ timestamp, message: INTERNAL_ERROR });
       }
     } else {
-      console.log(err, err.stack);
       res.status(500).json({ timestamp, message: INTERNAL_ERROR });
     }
   } catch (error) {
     // don't let any error pass thru!
-    console.log(error, error.stack);
     res.status(500).json({ timestamp, message: INTERNAL_ERROR });
   }
 });
