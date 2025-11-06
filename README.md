@@ -29,29 +29,30 @@ GET routes:
 
 /user (this one gets the current user's nickname/email/etc)
 /projects (gets all projects - unauthenticated access)
-/projects/user (gets the specific user's projects - authenticated by jwt)
-/project/:pid (gets a project - unauthenticated access)
-/project/:pid/interactions (gets a project's interactions - unauthenticated access)
-/project/:pid/comment/:cid (gets a project's comments - unauthenticated access)
+/projects/user (gets all the specific user's projects - authenticated by jwt)
+/projects/:pid (gets a project - unauthenticated access)
+/projects/:pid/interactions (gets a project's interactions - unauthenticated access)
+/projects/:pid/comment/:cid (gets a project's comments - unauthenticated access)
 
 POST routes:
 
 /user/login
 /user/sign-up
-/project
-/like
-/comment
+/projects/ (adds a new project to this user's list)
+/likes/:pid
+/comments/:pid
 
 PUT routes:
 
 /user
-/project
+/projects/:pid
 /projects/:pid/image
-/comment
+/comments/:pid
 
 DELETE routes:
 
 /user
-/project
-/comment
-/like
+/projects/:pid
+/projects/:pid/image
+/comments/:pid
+/likes/:pid

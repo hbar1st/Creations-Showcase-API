@@ -1,6 +1,8 @@
 const {
   getProjectsByUser,
   addNewProject,
+  deleteProject: dbDeleteProject,
+  deleteProjectImage: dbDeleteProjectImage,
   upsertImage,
   getProjectImage,
   getProjectById,
@@ -174,6 +176,7 @@ async function addImageToProject(req, res, next) {
       const result = await cloudinary.uploader.destroy(uploadResult.public_id, {
         resource_type: uploadResult.resource_type,
       });
+      console.log(result);
     }
     console.error(error, error.stack);
     throw error;
@@ -192,10 +195,77 @@ async function deleteFileFromMemory(path) {
     throw new AppError("Unexpected error.", 500, error);
   }
 }
+async function deleteProjectImage(req, res) {
+  console.log("in deleteProjectImage")
+  const user = req.user;
+  
+  try {
+    const deletedImage = await dbDeleteProjectImage(req.params.pid); 
+    if (deletedImage) {
 
+      // delete from Cloudinary too
+      const result = await cloudinary.uploader.destroy(deletedImage.public_id, {
+        resource_type: deletedImage.type,
+      });
+      console.log(result);      
+      res
+      .status(200)
+      .json({ status: "success", message: "Image delete complete." });
+    } else {
+      throw new AppError(
+        "Failed to delete the image records. Contact support.",
+        500
+      );
+    }
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    } else {
+      throw new AppError("Failed to delete the project record", 500, error);
+    }
+  }
+}
+async function deleteProject(req, res) {
+  console.log("in deleteProject")
+  const user = req.user;
+  
+  try {
+    // before deleting the project, delete the image(s) from cloudinary.
+    const deletedImage = await dbDeleteProjectImage(req.params.pid); 
+    if (!deletedImage) {
+      throw new AppError("Failed to delete the project and related image file")
+    }
+
+      // delete from Cloudinary too
+      const result = await cloudinary.uploader.destroy(deletedImage.public_id, {
+        resource_type: deletedImage.type,
+      });
+    console.log(result);
+    
+    const deletedProject = await dbDeleteProject(req.params.pid);
+    if (deletedProject) {
+      res
+      .status(200)
+      .json({ status: "success", message: "Project delete complete." });
+    } else {
+      throw new AppError(
+        "Failed to delete the project records. Contact support.",
+        500
+      );
+    }
+  } catch (err) {
+    if (error instanceof AppError) {
+      throw error;
+    } else {
+      throw new AppError("Failed to delete the project record", 500, error);
+    }
+  }
+}
 module.exports = {
   getUserProjects,
   addProject,
+  deleteProject,
+  deleteProjectImage,
   addImageToProject,
   getProjectDetails,
 };

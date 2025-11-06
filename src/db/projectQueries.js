@@ -168,6 +168,26 @@ async function getProjectImage(projectId) {
   return image;
 }
 
+async function deleteProject(pid) {
+  console.log("in deleteProject: ", pid);
+  const project = await prisma.default.project.delete({
+    where: {
+      id: Number(pid)
+    }
+  })
+  return project;
+}
+
+async function deleteProjectImage(pid) {
+  console.log("in deleteProjectImage: ", pid);
+  const image = await prisma.default.image.deleteMany({
+    where: {
+      projectId: Number(pid)
+    }
+  })
+  return image;
+}
+
 module.exports = {
   getProjectImage,
   addNewProject,
@@ -177,9 +197,10 @@ module.exports = {
   findAuthorById,
   addNewImage,
   upsertImage,
-  /*
   deleteProject,
-  getAllProjects,
-  updateProject,*/
+  deleteProjectImage,
+  /*
+  updateProject,
+  */
   getProjectsByUser,
 };

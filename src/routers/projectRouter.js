@@ -1,11 +1,18 @@
 // Routes belonging to /projects
 
 const { Router } = require("express");
-const { getUserProjects, getProjectDetails,
-  addProject, addImageToProject } = require("../controllers/projectController")
+const {
+  getUserProjects,
+  getProjectDetails,
+  addProject,
+  deleteProjectImage,
+  deleteProject,
+  addImageToProject } = require("../controllers/projectController")
+
 const {
   validateProjectFields,
-  validateImageFields, checkProjectId } = require("../validators/projectValidator")
+  checkProjectId
+} = require("../validators/projectValidator")
 
 
 const { handleExpressValidationErrors } = require("./routerUtil");
@@ -17,21 +24,44 @@ const projectRouter = Router();
 // note that we retrieve the user id from the jwt token so we don't need it specified in the route
 projectRouter
   .route("/user")
-  .get(passport.authenticate("jwt", { session: false }), getUserProjects)
-  .post(
+  .get(passport.authenticate("jwt", { session: false }), getUserProjects);
+
+
+projectRouter.route("/")
+  .post( //add a new project for this user
     passport.authenticate("jwt",{ session: false }),
     validateProjectFields,
     handleExpressValidationErrors,
     addProject);
-    // TODO add project delete and project update
-
+    
 projectRouter
   .route("/:pid/image")
-  .post(passport.authenticate("jwt", { session: false }),  validateImageFields, handleExpressValidationErrors, addImageToProject);
-//TODO add image delete and image update?
+  .delete(passport.authenticate("jwt", { session: false }),
+    checkProjectId(true),
+    handleExpressValidationErrors,
+    deleteProjectImage
+  )
+  .post(
+    passport.authenticate("jwt", { session: false }),
+    checkProjectId(true),
+    handleExpressValidationErrors,
+    addImageToProject
+  )
+  .put(
+    passport.authenticate("jwt", { session: false }),
+    checkProjectId(true),
+    handleExpressValidationErrors,
+    addImageToProject
+  );
   
-projectRouter.route("/:pid").get(
-  (req, res, next) => { console.log("in the route"); next() },
-  checkProjectId(), handleExpressValidationErrors, getProjectDetails);
+  
+// TODO add project update
+projectRouter
+  .route("/:pid")
+  .get(checkProjectId(), handleExpressValidationErrors, getProjectDetails)
+  .delete(passport.authenticate("jwt", { session: false }),
+    checkProjectId(true),
+    handleExpressValidationErrors,
+    deleteProject);
 
 module.exports = projectRouter;

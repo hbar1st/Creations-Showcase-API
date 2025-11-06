@@ -98,7 +98,7 @@ const checkLastname = (optional) => {
 
 const checkPassword = (optional) => {
   let ch1 = body("password").trim()
-  ch1 = optional ? ch1.optional({ checkFalsy: true }) : ch1;
+  ch1 = optional ? ch1.optional() : ch1;
   return ch1
   .notEmpty()
   .withMessage("A password is required.")
@@ -108,7 +108,6 @@ const checkPassword = (optional) => {
   )
   .hide("*****");
 }
-
 
 const checkPasswordConfirmation = () => {
   let ch1 = body("confirm-password").if(body("password").notEmpty()).trim();

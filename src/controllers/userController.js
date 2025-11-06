@@ -154,7 +154,7 @@ async function deleteUser (req, res) {
     if (error instanceof AppError) {
       throw error;
     } else {
-      throw new AppError("Failed to update the user record", 500, error);
+      throw new AppError("Failed to delete the user record", 500, error);
     }
   }
 }
