@@ -57,7 +57,7 @@ const checkPublished = () =>
     .withMessage("The published field must be a true or false.")
     .customSanitizer((value) => {
       console.log("value of published: ", value);
-      return value ? new Date().toISOString() : null;
+      return (value === 'true') ? new Date().toISOString() : null;
     })
     .optional();
 
