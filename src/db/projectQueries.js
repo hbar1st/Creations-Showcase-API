@@ -158,6 +158,16 @@ async function addNewImage(projectId, name, public_id, type, url) {
   return image;
 }
 
+async function getProjectImages(projectId) {
+  console.log("in getProjectImages: ", projectId);
+  const images = await prisma.default.image.findMany({
+    where: {
+      projectId: Number(projectId),
+    },
+  });
+  return images;
+}
+
 async function getProjectImage(projectId) {
   console.log("in getProjectImage: ", projectId)
   const image = await prisma.default.image.findFirst({
@@ -190,6 +200,7 @@ async function deleteProjectImage(pid) {
 
 module.exports = {
   getProjectImage,
+  getProjectImages, // should never be more than one in this iteration of the code
   addNewProject,
   getProjectById,
   getProjectByAuthor,

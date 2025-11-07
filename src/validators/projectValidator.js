@@ -75,8 +75,8 @@ const checkAuthorId = () =>
 
         console.log("author's row found: ", author);
         if (!author) {
-          throw new ValidationError(
-            "Validation failed", [{path: 'author id', type: 'field', msg: "This user id is not authorized to create projects."}]
+          throw new Error(
+            "This user id is not authorized to create projects."
           );
         } else {
           return true;
@@ -132,7 +132,7 @@ const validateImageFields = [
           if (project.authorId === req.user.id) {
             return true;
           } else {
-            throw new ValidationError("Unauthorized to perform current action.",[])
+            throw new Error("Unauthorized to perform current action.",[])
           }
         }
       } catch (error) {
@@ -160,13 +160,7 @@ function checkProjectId(strict = false) {
         const project = await findProject(value);
 
         if (!project) {
-          throw new ValidationError("Invalid project id", [
-            {
-              path: "projectId",
-              type: "field",
-              msg: "Cannot find this project",
-            },
-          ]);
+          throw new Error("Cannot find this project");
         }
         if (strict && project.authorId !== req.user.id) {
           throw new AuthError("Insufficient authority over project");

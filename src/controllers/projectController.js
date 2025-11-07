@@ -5,6 +5,7 @@ const {
   deleteProjectImage: dbDeleteProjectImage,
   upsertImage,
   getProjectImage,
+  getProjectImages,
   getProjectById,
 } = require("../db/projectQueries");
 
@@ -173,9 +174,7 @@ async function addImageToProject(req, res, next) {
     console.log("in uploadFile: found an error during upload?", error);
     if (uploadResult) {
       // clean up the file from cloudinary since we failed to store a record of it in postgresql
-      const result = await cloudinary.uploader.destroy(uploadResult.public_id, {
-        resource_type: uploadResult.resource_type,
-      });
+      const result = await cloudinary.uploader.destroy(uploadResult.public_id);
       console.log(result);
     }
     console.error(error, error.stack);
@@ -204,9 +203,7 @@ async function deleteProjectImage(req, res) {
     if (deletedImage) {
 
       // delete from Cloudinary too
-      const result = await cloudinary.uploader.destroy(deletedImage.public_id, {
-        resource_type: deletedImage.type,
-      });
+      const result = await cloudinary.uploader.destroy(deletedImage.public_id);
       console.log(result);      
       res
       .status(200)
@@ -231,17 +228,21 @@ async function deleteProject(req, res) {
   
   try {
     // before deleting the project, delete the image(s) from cloudinary.
-    const deletedImage = await dbDeleteProjectImage(req.params.pid); 
-    if (!deletedImage) {
-      throw new AppError("Failed to delete the project and related image file")
-    }
+    const images = await getProjectImages(req.params.pid);
+    console.log(images);
+    if (images) {
+      const deletedImage = await dbDeleteProjectImage(req.params.pid);
+      if (!deletedImage) {
+        throw new AppError("Failed to delete the project and related image file")
+      }
 
       // delete from Cloudinary too
-      const result = await cloudinary.uploader.destroy(deletedImage.public_id, {
-        resource_type: deletedImage.type,
+      images.forEach(async image => {
+        const result = await cloudinary.uploader.destroy(image.public_id);
+        console.log("Cloudinary delete result for public_id: ", image.public_id)
+        console.log(result);
       });
-    console.log(result);
-    
+    }
     const deletedProject = await dbDeleteProject(req.params.pid);
     if (deletedProject) {
       res
@@ -253,7 +254,7 @@ async function deleteProject(req, res) {
         500
       );
     }
-  } catch (err) {
+  } catch (error) {
     if (error instanceof AppError) {
       throw error;
     } else {
