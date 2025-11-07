@@ -1,6 +1,40 @@
 //const { PrismaClient } = require("../generated/prisma/client");
 const prisma = require("../middleware/prisma.mjs");
 
+
+async function updateProject(
+  authorId, id,
+  { title, descr, live_link, repo_link, keywords, published }
+) {
+  console.log(
+    "in updateProject",
+    authorId,
+    id,
+    title,
+    descr,
+    live_link,
+    repo_link,
+    keywords,
+    published
+  );
+  const project = await prisma.default.project.update({
+    where: {
+      id: Number(id),
+      authorId: Number(authorId),
+    },
+    data: {
+      title,
+      descr,
+      live_link,
+      repo_link,
+      keywords,
+      published,
+    },
+  });
+  return project;
+}
+
+
 async function addNewProject(
   authorId,
   { title, descr, live_link, repo_link, keywords, published }
@@ -13,7 +47,7 @@ async function addNewProject(
       live_link,
       repo_link,
       keywords,
-      published: published,
+      published,
     },
   });
   return newProject;
@@ -210,8 +244,13 @@ module.exports = {
   upsertImage,
   deleteProject,
   deleteProjectImage,
-  /*
   updateProject,
-  */
   getProjectsByUser,
+  /*
+  addComment
+  updateComment
+  deleteComment
+  likeProjectToggle
+  getProjectCommentsAndLikes
+  */
 };

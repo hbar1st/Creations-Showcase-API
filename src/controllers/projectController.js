@@ -1,6 +1,7 @@
 const {
   getProjectsByUser,
   addNewProject,
+  updateProject: dbUpdateProject,
   deleteProject: dbDeleteProject,
   deleteProjectImage: dbDeleteProjectImage,
   upsertImage,
@@ -76,18 +77,44 @@ async function getUserProjects(req, res) {
   }
 }
 
-async function addProject(req, res) {
-  console.log("in addNewProject: ", req.body);
+async function updateProject(req, res) {
+  console.log("in updateProject: ", req.body);
   const user = req.user;
   if (!user) {
     throw new AppError("Failed to get the user record", 500);
   }
-  // TODO fill the logic in to add a new project
-  // start by adding the plain project then add code to add the featured image too
+  
+  if (!req.body.published) {
+    req.body.published = null;
+  }
+  try {
+    const project = await dbUpdateProject(user.id, req.params.pid, req.body);
+    if (project) {
+      res.status(200).json({ status: "success", result: project });
+    } else {
+      throw new AppError("Failed up update the project");
+    }
+  } catch (error) {
+    console.log(error, error.stack);
+    throw error;
+  }
+}
+
+async function addProject(req, res) {
+  console.log("in addProject: ", req.body);
+  const user = req.user;
+  if (!user) {
+    throw new AppError("Failed to get the user record", 500);
+  }
+  if (!req.body.published) {
+    req.body.published = null;
+  }
   try {
     const project = await addNewProject(user.id, req.body);
     if (project) {
       res.status(200).json({ status: "success", result: project });
+    } else {
+      throw new AppError("Failed to add the new project")
     }
   } catch (error) {
     console.log(error, error.stack);
@@ -265,6 +292,7 @@ async function deleteProject(req, res) {
 module.exports = {
   getUserProjects,
   addProject,
+  updateProject,
   deleteProject,
   deleteProjectImage,
   addImageToProject,

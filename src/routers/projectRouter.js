@@ -5,12 +5,14 @@ const {
   getUserProjects,
   getProjectDetails,
   addProject,
+  updateProject,
   deleteProjectImage,
   deleteProject,
   addImageToProject } = require("../controllers/projectController")
 
 const {
   validateProjectFields,
+  validateEnhancedProjectFields,
   checkProjectId
 } = require("../validators/projectValidator")
 
@@ -59,9 +61,18 @@ projectRouter
 projectRouter
   .route("/:pid")
   .get(checkProjectId(), handleExpressValidationErrors, getProjectDetails)
-  .delete(passport.authenticate("jwt", { session: false }),
+  .put(
+    passport.authenticate("jwt", { session: false }),
+    validateEnhancedProjectFields,
+    (req, res, next) => { console.log("value of req.body.published: ", req.body.published); next(); },
+    handleExpressValidationErrors,
+    updateProject
+  )
+  .delete(
+    passport.authenticate("jwt", { session: false }),
     checkProjectId(true),
     handleExpressValidationErrors,
-    deleteProject);
+    deleteProject
+  );
 
 module.exports = projectRouter;

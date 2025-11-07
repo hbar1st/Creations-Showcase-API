@@ -10,7 +10,7 @@ const checkTitle = () =>
   body("title")
     .trim()
     .notEmpty()
-    .withMessage("New projects requires a title.")
+    .withMessage("Projects require a title.")
     .isLength({ max: 100 })
     .withMessage("The title is too long. Use no more than 100 characters.");
 
@@ -18,7 +18,7 @@ const checkDescr = () =>
   body("descr")
     .trim()
     .notEmpty()
-    .withMessage("New projects require a description.");
+    .withMessage("Projects require a description.");
 
 const checkLiveLink = () =>
   body("live-link")
@@ -53,19 +53,19 @@ strictMode?: boolean;
 const checkPublished = () =>
   body("published")
     .trim()
-    .optional()
     .isBoolean()
-    .customSanitizer(
-      (value, { req }) => (new Date()).toISOString()
-    )
-    .withMessage("The published field must be a true or false.");
-
+    .withMessage("The published field must be a true or false.")
+    .customSanitizer((value) => {
+      console.log("value of published: ", value);
+      return value ? new Date().toISOString() : null;
+    })
+    .optional();
 
 const checkAuthorId = () =>
   body("authorId")
     .trim()
     .notEmpty()
-    .withMessage("New projects require an author.")
+    .withMessage("Projects require an author.")
     .isInt({ min: 1 })
     .withMessage("Invalid type of author id.")
     .toInt()
@@ -75,9 +75,7 @@ const checkAuthorId = () =>
 
         console.log("author's row found: ", author);
         if (!author) {
-          throw new Error(
-            "This user id is not authorized to create projects."
-          );
+          throw new Error("This user id is not authorized to create projects.");
         } else {
           return true;
         }
@@ -88,59 +86,72 @@ const checkAuthorId = () =>
       }
     });
 
-    /**
-     * confirm a body is provided and santize authorId to the user's id (from the jwt token)
-     */
+/**
+ * confirm a body is provided and santize authorId to the user's id (from the jwt token)
+ */
 const prevalidation = [
   body()
     .exists()
     .withMessage("Invalid request. Missing request body.")
     .bail({ level: "request" }),
-  body("authorId").customSanitizer(
-    (value, { req }) => Number(req.user.id) 
-  ),
+  body("authorId").customSanitizer((value, { req }) => Number(req.user.id)),
 ];
-// used for creating a new project
-const validateProjectFields = [
-  prevalidation,
-  checkAuthorId(),
-  checkTitle(),
-  checkDescr(),
+
+const validateOptionalProjectFields = [
   checkLiveLink(),
   checkRepoLink(),
   checkKeywords(),
   checkPublished(),
 ];
+
+const validateEnhancedProjectFields = [
+  prevalidation,
+  checkProjectId(true),
+  checkTitle(),
+  checkDescr(),
+  checkAuthorId(),
+  ...validateOptionalProjectFields,
+];
+
+// used for creating a new project
+const validateProjectFields = [
+  prevalidation,
+  checkTitle(),
+  checkDescr(),
+  checkAuthorId(),
+  ...validateOptionalProjectFields,
+];
+
 /*
 const validateImageFields = [
-  param("pid")
-    .trim()
-    .notEmpty()
-    .withMessage("Project id is missing. Cannot upload without it.")
-    .customSanitizer((value) => Number(value))
-    .custom(async (value, {req}) => {
-      try {
-        const project = await findProject(value);
+param("pid")
+.trim()
+.notEmpty()
+.withMessage("Project id is missing. Cannot upload without it.")
+.customSanitizer((value) => Number(value))
+.custom(async (value, {req}) => {
+  try {
+const project = await findProject(value);
 
-        console.log("project's row found: ", project);
-        if (!project) {
-          throw new AuthError(
-            "This project id doesn't exist."
-          );
-        } else {
-          // check that this project belongs to the current user
-          if (project.authorId === req.user.id) {
-            return true;
-          } else {
-            throw new Error("Unauthorized to perform current action.",[])
-          }
-        }
-      } catch (error) {
-        console.log(error);
-        console.log(error.stack);
-        throw error;
-      }
-    }),
+console.log("project's row found: ", project);
+if (!project) {
+throw new AuthError(
+"This project id doesn't exist."
+);
+} else {
+  // check that this project belongs to the current user
+if (project.authorId === req.user.id) {
+return true;
+} else {
+  throw new Error("Unauthorized to perform current action.",[])
+}
+}
+} catch (error) {
+console.log(error);
+console.log(error.stack);
+throw error;
+}
+}),
 ];
 */
 
@@ -176,6 +187,7 @@ function checkProjectId(strict = false) {
 
 module.exports = {
   validateProjectFields,
+  validateEnhancedProjectFields,
   checkProjectId,
   checkProjectIdStrict,
 };
