@@ -1,4 +1,3 @@
-//const { PrismaClient } = require("../generated/prisma/client");
 const prisma = require("../middleware/prisma.mjs");
 
 
@@ -119,6 +118,47 @@ async function getProjectByAuthor(authorId, projectId) {
   console.log("return project: ", project);
   return project;
 }
+
+/**
+ * get all the project and all their respective likes/comments
+ * @returns
+ */
+async function getAllProjects(published=true) {
+  console.log("in getAllProjects: ");
+
+  const projects = await prisma.default.project.findMany({
+    where: {
+      NOT: {
+        published: null,
+      },
+    },
+    include: {
+      author: {
+        select: {
+          user: {
+            select: {
+              nickname: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          likes: true,
+          comments: true,
+        },
+      },
+      images: true,
+      comments: true,
+    },
+    orderBy: {
+      authorId: 'desc',
+    },
+  });
+
+  return projects;
+}
+
 /**
  * get the project and all its likes/comments/viewCounts
  * @param {*} projectId
@@ -246,11 +286,5 @@ module.exports = {
   deleteProjectImage,
   updateProject,
   getProjectsByUser,
-  /*
-  addComment
-  updateComment
-  deleteComment
-  likeProjectToggle
-  getProjectCommentsAndLikes
-  */
+  getAllProjects,
 };

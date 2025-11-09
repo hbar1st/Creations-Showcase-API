@@ -68,6 +68,10 @@ app.use("/user", userRouter);
 const projectRouter = require("./routers/projectRouter")
 app.use("/projects", projectRouter)
 
+
+const interactionsRouter = require("./routers/interactionsRouter");
+app.use("/projects", interactionsRouter);
+
 // Catch-all for unhandled routes (must be placed last but before error handler)
 app.use((req, res) => {
   res.status(404).json({

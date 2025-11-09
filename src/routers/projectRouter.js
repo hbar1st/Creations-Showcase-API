@@ -3,6 +3,7 @@
 const { Router } = require("express");
 const {
   getUserProjects,
+  getAllProjects,
   getProjectDetails,
   addProject,
   updateProject,
@@ -29,7 +30,9 @@ projectRouter
   .get(passport.authenticate("jwt", { session: false }), getUserProjects);
 
 
+
 projectRouter.route("/")
+  .get(getAllProjects) //used to get a look at the projects without authentication
   .post( //add a new project for this user
     passport.authenticate("jwt",{ session: false }),
     validateProjectFields,

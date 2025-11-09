@@ -1,6 +1,4 @@
 const AuthError = require("../errors/AuthError");
-const AppError = require("../errors/AppError");
-const ValidationError = require("../errors/ValidationError");
 
 const { body, param } = require("express-validator");
 
@@ -57,7 +55,7 @@ const checkPublished = () =>
     .withMessage("The published field must be a true or false.")
     .customSanitizer((value) => {
       console.log("value of published: ", value);
-      return (value === 'true') ? new Date().toISOString() : null;
+      return (value === true || value === 'true') ? new Date().toISOString() : null;
     })
     .optional();
 
@@ -121,39 +119,6 @@ const validateProjectFields = [
   checkAuthorId(),
   ...validateOptionalProjectFields,
 ];
-
-/*
-const validateImageFields = [
-param("pid")
-.trim()
-.notEmpty()
-.withMessage("Project id is missing. Cannot upload without it.")
-.customSanitizer((value) => Number(value))
-.custom(async (value, {req}) => {
-  try {
-const project = await findProject(value);
-
-console.log("project's row found: ", project);
-if (!project) {
-throw new AuthError(
-"This project id doesn't exist."
-);
-} else {
-  // check that this project belongs to the current user
-if (project.authorId === req.user.id) {
-return true;
-} else {
-  throw new Error("Unauthorized to perform current action.",[])
-}
-}
-} catch (error) {
-console.log(error);
-console.log(error.stack);
-throw error;
-}
-}),
-];
-*/
 
 const checkProjectIdStrict = checkProjectId(true);
 

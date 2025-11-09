@@ -1,6 +1,7 @@
 const {
   getProjectsByUser,
   addNewProject,
+  getAllProjects: dbGetAllProjects,
   updateProject: dbUpdateProject,
   deleteProject: dbDeleteProject,
   deleteProjectImage: dbDeleteProjectImage,
@@ -74,6 +75,21 @@ async function getUserProjects(req, res) {
     }
   } else {
     throw new AppError("Failed to get the user record", 500);
+  }
+}
+
+async function getAllProjects(req, res) {
+  console.log("in getAllProjects");
+  try {
+    const projects = await dbGetAllProjects();
+    if (projects) {
+      res.status(200).json({ status: "success", result: projects });
+    } else {
+      throw new AppError("Failed to access the projects", 500);
+    }
+  } catch (error) {
+    console.log(error, error.stack);
+    throw error;
   }
 }
 
@@ -297,4 +313,5 @@ module.exports = {
   deleteProjectImage,
   addImageToProject,
   getProjectDetails,
+  getAllProjects,
 };
