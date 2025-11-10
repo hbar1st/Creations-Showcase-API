@@ -93,4 +93,5 @@ model Like {
   userId    Int
 
   @@map(name: "likes")
+  @@unique([projectId, userId])
 }

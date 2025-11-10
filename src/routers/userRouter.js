@@ -31,7 +31,7 @@ userRouter.get(
     if (user) {
       res
         .status(200)
-        .json({ status: "success", message: "Authorization confirmed." });
+        .json({ status: "success", message: "Authorization confirmed.", userid: user.id });
     } else {
       throw new AuthError();
     }

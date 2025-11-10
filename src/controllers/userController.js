@@ -129,7 +129,7 @@ async function login(req, res) {
     //res.json({ token });
     res.set("Access-Control-Expose-Headers", "Authorization");
     
-    res.status(201).json({ status: 'success', message: "Login successful." });
+    res.status(201).json({ status: 'success', message: "Login successful.", userid: user.id });
     
   } catch (error) {
     if (error instanceof AppError) {

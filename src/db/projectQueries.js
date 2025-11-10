@@ -149,6 +149,11 @@ async function getAllProjects(published=true) {
         },
       },
       images: true,
+      likes: {
+        select: {
+          userId: true,
+        },
+      },
       comments: true,
     },
     orderBy: {
