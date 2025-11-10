@@ -39,7 +39,7 @@ POST routes:
 /user/login
 /user/sign-up
 /projects/ (adds a new project to this user's list)
-/likes/:pid
+/projects/:pid/like
 /comments/:pid
 
 PUT routes:
@@ -47,12 +47,13 @@ PUT routes:
 /user
 /projects/:pid
 /projects/:pid/image
-/comments/:pid
+/projects/:pid/comment
+
 
 DELETE routes:
 
 /user
 /projects/:pid
 /projects/:pid/image
-/comments/:pid
-/likes/:pid
+/projects/:pid/comment
+/projects/:pid/like

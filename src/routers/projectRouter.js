@@ -11,6 +11,11 @@ const {
   deleteProject,
   addImageToProject } = require("../controllers/projectController")
 
+  const {
+    addLike,
+    removeLike,
+  } = require("../controllers/interactionsController");
+
 const {
   validateProjectFields,
   validateEnhancedProjectFields,
@@ -28,8 +33,6 @@ const projectRouter = Router();
 projectRouter
   .route("/user")
   .get(passport.authenticate("jwt", { session: false }), getUserProjects);
-
-
 
 projectRouter.route("/")
   .get(getAllProjects) //used to get a look at the projects without authentication
@@ -60,7 +63,6 @@ projectRouter
   );
   
   
-// TODO add project update
 projectRouter
   .route("/:pid")
   .get(checkProjectId(), handleExpressValidationErrors, getProjectDetails)
@@ -78,4 +80,22 @@ projectRouter
     deleteProject
   );
 
+projectRouter
+  .route("/:pid/like")
+  .put(
+    passport.authenticate("jwt", { session: false }),
+    checkProjectId(false),
+    handleExpressValidationErrors,
+    addLike
+  )
+  .delete(
+    passport.authenticate("jwt", { session: false }),
+    checkProjectId(false),
+    handleExpressValidationErrors,
+    removeLike
+  );
+
+/*
+projectRouter.route("/:pid/comment").post().put().delete()
+*/
 module.exports = projectRouter;

@@ -128,7 +128,7 @@ function checkProjectId(strict = false) {
     .notEmpty()
     .withMessage("Project id is missing.")
     .isInt({ min: 1 })
-    .withMessage("Projoect id's value is nvalid.")
+    .withMessage("Projoect id's value is not valid.")
     .toInt()
     .custom(async (value, { req }) => {
       //confirm project exists with the current user's author id, otherwise, this is invalid
