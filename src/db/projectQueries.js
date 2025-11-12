@@ -1,8 +1,8 @@
 const prisma = require("../middleware/prisma.mjs");
 
-
 async function updateProject(
-  authorId, id,
+  authorId,
+  id,
   { title, descr, live_link, repo_link, keywords, published }
 ) {
   console.log(
@@ -33,7 +33,6 @@ async function updateProject(
   return project;
 }
 
-
 async function addNewProject(
   authorId,
   { title, descr, live_link, repo_link, keywords, published }
@@ -63,14 +62,13 @@ async function getProjectsByUser(userId) {
   const projects = await prisma.default.project.findMany({
     where: { authorId: Number(userId) },
     include: {
-
       images: true,
       _count: {
         select: {
           likes: true,
-          comments: true
-        }
-      }
+          comments: true,
+        },
+      },
     },
   });
 
@@ -80,25 +78,25 @@ async function getProjectsByUser(userId) {
 
 /**
  * just confirms that the project exists, returns only pid to confirm
- * @param {*} projectId 
+ * @param {*} projectId
  */
 async function findProject(projectId) {
-  console.log("in findProject: ", projectId)
+  console.log("in findProject: ", projectId);
   const project = await prisma.default.project.findUnique({
     where: { id: Number(projectId) },
     select: {
       id: true,
-      authorId: true
-    }
-  })
+      authorId: true,
+    },
+  });
   return project;
 }
 
 /**
-* get the project by pid and authorID and all its likes/comments/viewCounts
- * @param {*} authorId 
- * @param {*} projectId 
- * @returns 
+ * get the project by pid and authorID and all its likes/comments/viewCounts
+ * @param {*} authorId
+ * @param {*} projectId
+ * @returns
  */
 async function getProjectByAuthor(authorId, projectId) {
   console.log("in getProjectByAuthor: ", authorId, projectId);
@@ -106,7 +104,7 @@ async function getProjectByAuthor(authorId, projectId) {
   const project = await prisma.default.project.findUnique({
     where: {
       id: Number(projectId),
-      authorId: Number(authorId)
+      authorId: Number(authorId),
     },
     include: {
       images: true,
@@ -123,7 +121,7 @@ async function getProjectByAuthor(authorId, projectId) {
  * get all the project and all their respective likes/comments
  * @returns
  */
-async function getAllProjects(published=true) {
+async function getAllProjects(published = true) {
   console.log("in getAllProjects: ");
 
   const projects = await prisma.default.project.findMany({
@@ -155,9 +153,18 @@ async function getAllProjects(published=true) {
         },
       },
       comments: true,
+      comments: {
+        include: {
+          user: {
+            select: {
+              nickname: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
-      authorId: 'desc',
+      authorId: "desc",
     },
   });
 
@@ -231,9 +238,9 @@ async function addNewImage(projectId, name, public_id, type, url) {
       public_id,
       type,
       url,
-      projectId: Number(projectId)
-    }
-  })
+      projectId: Number(projectId),
+    },
+  });
   return image;
 }
 
@@ -248,12 +255,12 @@ async function getProjectImages(projectId) {
 }
 
 async function getProjectImage(projectId) {
-  console.log("in getProjectImage: ", projectId)
+  console.log("in getProjectImage: ", projectId);
   const image = await prisma.default.image.findFirst({
     where: {
-      projectId: Number(projectId)
-    }
-  })
+      projectId: Number(projectId),
+    },
+  });
   return image;
 }
 
@@ -261,9 +268,9 @@ async function deleteProject(pid) {
   console.log("in deleteProject: ", pid);
   const project = await prisma.default.project.delete({
     where: {
-      id: Number(pid)
-    }
-  })
+      id: Number(pid),
+    },
+  });
   return project;
 }
 
@@ -271,9 +278,9 @@ async function deleteProjectImage(pid) {
   console.log("in deleteProjectImage: ", pid);
   const image = await prisma.default.image.deleteMany({
     where: {
-      projectId: Number(pid)
-    }
-  })
+      projectId: Number(pid),
+    },
+  });
   return image;
 }
 

@@ -14,13 +14,23 @@ const {
   const {
     addLike,
     removeLike,
+    addComment,
+    updateComment,
+    removeComment,
   } = require("../controllers/interactionsController");
 
 const {
   validateProjectFields,
   validateEnhancedProjectFields,
-  checkProjectId
-} = require("../validators/projectValidator")
+  checkProjectId,
+  checkProjectIdStrict,
+} = require("../validators/projectValidator");
+
+const {
+  checkNewCommentRequirements,
+  checkUpdateCommentRequirements,
+  checkDeleteCommentRequirements,
+} = require("../validators/interactionsValidator")
 
 
 const { handleExpressValidationErrors } = require("./routerUtil");
@@ -95,7 +105,26 @@ projectRouter
     removeLike
   );
 
-/*
-projectRouter.route("/:pid/comment").post().put().delete()
-*/
+
+projectRouter
+  .route("/:pid/comment")
+  .post(
+    passport.authenticate("jwt", { session: false }),
+    checkNewCommentRequirements,
+    handleExpressValidationErrors,
+    addComment
+  )
+  .put(
+    passport.authenticate("jwt", { session: false }),
+    checkUpdateCommentRequirements,
+    handleExpressValidationErrors,
+    updateComment
+  )
+  .delete(
+    passport.authenticate("jwt", { session: false }),
+    checkDeleteCommentRequirements,
+    handleExpressValidationErrors,
+    removeComment
+  );
+
 module.exports = projectRouter;
