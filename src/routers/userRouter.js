@@ -47,7 +47,7 @@ userRouter.route("/login").post(login);
 // note that we retrieve the user id from the jwt token so we don't need it specified in the route
 userRouter
   .route("/")
-  .get(passport.authenticate("jwt", { session: false }), getUser)
+  .get((req, res, next) => { console.log("req header: ",req.header);  next()},passport.authenticate("jwt", { session: false }), getUser)
   .put(
     passport.authenticate("jwt", { session: false }),
     validateOptionalUserFields,

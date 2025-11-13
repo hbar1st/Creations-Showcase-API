@@ -6,7 +6,7 @@
   "scripts": {
     "build": "prisma migrate reset -f",
     "prisma:generate": "prisma generate --sql",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest --disableConsoleIntercept",
     "start": "nodemon src/index.js"
   },
   "repository": {
@@ -17,9 +17,14 @@
     "REST"
   ],
   "devDependencies": {
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "babel-jest": "^30.2.0",
     "ejs-lint": "^2.0.1",
     "eslint": "^9.38.0",
-    "prisma": "^6.19.0"
+    "prisma": "^6.19.0",
+    "supertest": "^7.1.4",
+    "vitest": "^4.0.8"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^6.18.0",

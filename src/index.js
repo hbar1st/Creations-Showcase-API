@@ -57,9 +57,8 @@ app.use((req, res, next) => {
 });
 
 // TODO setup the root route to explain the api? Think about it (refer to other apis you've used before)
-app.get("/", (req, res) => {
-  res.send("The Creations Showcase API is an API that lets you showcase your web development projects and receive feedback on them.");
-});
+const indexRouter = require("./routers/indexRouter");
+app.use("/", indexRouter);
 
 // userRouter has the routes that are not strictly REST but needed for login/signup/logout
 const userRouter = require("./routers/userRouter");
