@@ -7,14 +7,6 @@ const ValidationError = require("./errors/ValidationError");
 
 const app = express();
 
-// configure cors // TODO read this to setup https://expressjs.com/en/resources/middleware/cors.html#enabling-cors-pre-flight:~:text=%27)%0A%7D)-,Configuring%20CORS,-See%20the%20configuration
-/*
-const corsOptions = {
-origin: "http://example.com",
-optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
-};
-*/
-
 // enable cors on all routes for now // TODO restrict to your actual client apps
 app.use(
   cors({

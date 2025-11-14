@@ -8,10 +8,19 @@ test("negative test: user route with no token",
     .get("/user")
 
     .set("Accept", "text/html; charset=utf-8")
-    .expect("Content-Type", /json/)
+    .expect(401);
 
-    .expect(200);
+  console.log("response: ",res.text)
 
-  console.log("response: ",res.status)
+  });
 
-});
+  test.skip("wacko test",  (done) => {
+    const res =  request(app)
+      .get("/user")
+
+      .set("Accept", "text/html; charset=utf-8")
+      .expect("Content-Type", /text/)
+      .expect(200, done);
+
+    console.log("response: ", res.text);
+  });
