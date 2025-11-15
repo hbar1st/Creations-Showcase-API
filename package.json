@@ -4,10 +4,13 @@
   "description": "Creations Showcase REST API",
   "main": "src/index.js",
   "scripts": {
-    "build": "prisma migrate reset -f",
+    "build": "npm run migrate:deploy",
     "prisma:generate": "prisma generate --sql",
-    "test": "vitest --disableConsoleIntercept",
-    "start": "nodemon src/index.js"
+    "db:reset": "prisma migrate reset -f && prisma generate",
+    "migrate:deploy": "prisma migrate deploy && prisma generate",
+    "test": "NODE_ENV=test npm run db:reset && vitest --disableConsoleIntercept",
+    "start": "nodemon src/index.js",
+    "dev": "NODE_ENV=development nodemon src/index.js"
   },
   "repository": {
     "type": "git",

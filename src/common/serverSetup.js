@@ -1,45 +1,41 @@
-
 import { default as express } from "express";
-import cors from  "cors";
-import 'dotenv/config'; 
+import cors from "cors";
+import "dotenv/config";
 import AppError from "../errors/AppError.js";
 import ValidationError from "../errors/ValidationError.js";
 
 const app = express();
 
-app.use(express.urlencoded({ extended: true })) 
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
 
 app.use(
   cors({
-    origin: "*", 
+    origin: "*",
     allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Content-Type", "Authorization"]
+    exposedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-
 
 // use cloudinary to upload project images
 import { v2 as cloudinary } from "cloudinary";
 
 function setupCloudinary() {
   console.log("Setting up Cloudinary");
-  
+
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
-  
+
   // Log the configuration
   console.log(cloudinary.config());
 }
 setupCloudinary();
 
-// need to initialize passport 
-import  passport  from "../middleware/passport.js";
+// need to initialize passport
+import passport from "../middleware/passport.js";
 app.use(passport.initialize());
 
 // set up the locals currentUser value before we do any rendering?? (not useful in a REST api? // TODO check into this - maybe not needed)
@@ -48,9 +44,7 @@ app.use((req, res, next) => {
   next();
 });
 
-
-
-import  indexRouter  from "../routers/indexRouter.js";
+import indexRouter from "../routers/indexRouter.js";
 app.use("/", indexRouter);
 
 import userRouter from "../routers/userRouter.js";
@@ -58,7 +52,6 @@ app.use("/user", userRouter);
 
 import projectRouter from "../routers/projectRouter.js";
 app.use("/projects", projectRouter);
-
 
 // Catch-all for unhandled routes (must be placed last but before error handler)
 app.use((req, res) => {
@@ -74,13 +67,24 @@ const INTERNAL_ERROR =
 // catch-all for errors
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  const timestamp = new Date().toUTCString;
+  const timestamp = new Date().toUTCString();
   res.set({ "Content-Type": "application/problem+json" }); // this type from https://datatracker.ietf.org/doc/html/rfc7807#section-3
   try {
     console.log("================================================");
     console.error("in the catch-all: ", timestamp, err, err.stack);
-    if (err instanceof AppError) {
+
+    console.log("constructor of the error is called: ", err.constructor.name); //constructor of the error is called:  ValidationError
+
+    console.log(Object.getPrototypeOf(err)); // [AppError]
+
+    console.log(err instanceof AppError); //false 
+
+    console.log("err instanceof AppError:", err instanceof AppError);
+    console.log(err.name)
+
+    if (err instanceof AppError || err.name === "AppError") {
       {
+        console.log("found an instance of AppError");
         res.status(err.statusCode);
         if (err instanceof ValidationError) {
           res.json({
@@ -111,6 +115,7 @@ app.use((err, req, res, next) => {
         res.status(500).json({ timestamp, message: INTERNAL_ERROR });
       }
     } else {
+      console.log("this error is not an instance of AppError");
       res.status(500).json({ timestamp, message: INTERNAL_ERROR });
     }
   } catch (error) {
@@ -119,5 +124,4 @@ app.use((err, req, res, next) => {
   }
 });
 
-
-export {app}
+export { app };
